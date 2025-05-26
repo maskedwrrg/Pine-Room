@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>WebSocket Chat Room</title>
+  <style>
+    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+    #chat-container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 10px; }
+    #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+    .message { margin-bottom: 10px; }
+    .username { font-weight: bold; color: #007bff; }
+    input, button { padding: 8px; font-size: 14px; }
+    #username { width: 100px; }
+    #message { width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <h2>Chat Room</h2>
+    <div id="messages"></div>
+    <input id="username" placeholder="Name" />
+    <input id="message" placeholder="Type a message" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:3000');
+    const messagesDiv = document.getElementById('messages');
+
+    socket.addEventListener('message', event => {
+      const { user, text } = JSON.parse(event.data);
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message';
+      msgDiv.innerHTML = `<span class="username">${user}:</span> ${text}`;
+      messagesDiv.appendChild(msgDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    function sendMessage() {
+      const user = document.getElementById('username').value.trim();
+      const text = document.getElementById('message').value.trim();
+      if (!user || !text) return;
+
+      socket.send(JSON.stringify({ user, text }));
+      document.getElementById('message').value = '';
+    }
+
+    document.getElementById('message').addEventListener('keypress', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
